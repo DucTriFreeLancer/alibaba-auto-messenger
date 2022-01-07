@@ -6,7 +6,7 @@
 				<div v-for="group in groups" :key="group.name" class="row g-3" v-bind="group.wrapper.props">
 					<div v-for="field in group.fields" :key="field.name" v-bind="field.wrapper.props">
 						<label :for="field.name" class="form-label">{{ field.label }}</label>
-						<component :is="field.tag" :id="field.name" :value="value[field.name]" v-bind="field.props" @input="onInput(field, $event)"/>
+						<component :is="field.tag" :id="field.name" :value="value[field.name]" v-bind="field.props" @input="onInput(field, $event)">{{ value[field.name] }}</component>
 					</div>
 				</div>
 			</div>
