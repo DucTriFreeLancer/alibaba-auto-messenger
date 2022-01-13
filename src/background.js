@@ -1,8 +1,8 @@
-// browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-browser.runtime.onMessage.addListener(() => {
-  console.log('Hello from the background');
+chrome.browserAction.onClicked.addListener(() => {
+	chrome.tabs.create({url: 'index.html'});
+});
 
-  browser.tabs.executeScript({
-    file: 'content-script.js',
-  });
+chrome.runtime.onMessage.addListener(function (msg, sender) {
+	if (msg.text === 'close') chrome.tabs.remove(sender.tab.id, () => {
+	});
 });

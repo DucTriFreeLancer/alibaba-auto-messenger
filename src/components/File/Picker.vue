@@ -62,7 +62,7 @@
 				return `${truncate(filename, 8)} (${this.value.size} bytes)`;
 			},
 			hasValue() {
-				return typeof this.value !== 'undefined' && this.value !== null;
+				return typeof this.value !== 'undefined' && this.value !== null && 'name' in this.value;
 			}
 		}
 	}

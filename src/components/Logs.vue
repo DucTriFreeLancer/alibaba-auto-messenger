@@ -34,7 +34,7 @@
 				this.$copyText(this.value);
 			},
 			onReset() {
-				this.$store.commit('log/reset');
+				return this.$store.dispatch('log/reset');
 			}
 		},
 		computed: {

@@ -1,31 +1,53 @@
 {
-  "manifest_version": 2,
-  "name": "__MSG_extName__",
-  "homepage_url": "http://localhost:8080/",
-  "description": "A Vue Browser Extension",
-  "default_locale": "en",
-  "permissions": [
-    "activeTab",
-    "<all_urls>",
-    "*://*/*"
-  ],
-  "icons": {
-    "16": "icons/16.png",
-    "48": "icons/48.png",
-    "128": "icons/128.png"
-  },
-  "background": {
-    "scripts": [
-      "js/background.js"
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhwzdfFa0pVuV52dkMOy8ApVUzZJ7AVZTxvdTbF2r6szyG8UYUEh+bd5FBxxSNpGSVDey8huB+gpHB6mD20Rqx+cYiH0G3+iKBWINm8WlAxe4s5IDsyoJsSBCniR4YMOoPFg2N8/YkN/de7jJodJY542Rh1isnThMHlYiEpTY8uazFJ1Re5xKz6UlRkADksjBHr7Q53Wph+X5PMEn92N3NLU3jdb+4bJmynp6WFdp+eYMV7IZKoCCC8NUIRhAcmYJvOgaE25cEejWqf7mIgLif08mRMqh5Eekf5wSFMtRXH6szAfdKinJBa+Xks5aG8kfQUytEvIQpAuJIXf7A4F29wIDAQAB",
+    "manifest_version": 2,
+    "content_security_policy": "script-src 'self' 'unsafe-eval' https://apis.google.com/js/api.js; object-src 'self'",
+    "name": "__MSG_extName__",
+    "homepage_url": "http://localhost:8080/",
+    "description": "A customized extension for sending mass messages to Alibaba Suppliers.",
+    "default_locale": "en",
+    "permissions": [
+        "tabs",
+        "identity",
+        "storage",
+        "activeTab",
+        "<all_urls>",
+        "*://*/*"
     ],
-    "persistent": false
-  },
-  "browser_action": {
-    "default_popup": "popup.html",
-    "default_title": "__MSG_extName__",
-    "default_icon": {
-      "19": "icons/19.png",
-      "38": "icons/38.png"
+    "icons": {
+        "16": "icons/16.png",
+        "48": "icons/48.png",
+        "128": "icons/128.png"
+    },
+    "oauth2": {
+        "api_key": "AIzaSyCHg0Kjp2Vi6P0TP0k8Hd06HvQvO2Dyzz4",
+        "client_id": "721965620156-qi7fu82u195un6f1u0g8n99qe0s1gs9a.apps.googleusercontent.com",
+        "scopes": [
+            "https://www.googleapis.com/auth/spreadsheets"
+        ]
+    },
+    "background": {
+        "scripts": [
+            "js/background.js"
+        ],
+        "persistent": false
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.en.alibaba.com/*",
+                "*://onetalk.alibaba.com/*"
+            ],
+            "all_frames": true,
+            "js": [
+                "js/content-script.js"
+            ]
+        }
+    ],
+    "browser_action": {
+        "default_icon": {
+            "19": "icons/19.png",
+            "38": "icons/38.png"
+        }
     }
-  }
 }
