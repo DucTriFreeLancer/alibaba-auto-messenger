@@ -122,6 +122,7 @@ let messageFields = [
 		tag: 'textarea',
 		props: {
 			...baseProps,
+			required: false
 		},
 		wrapper: fullWidthWrapper
 	}

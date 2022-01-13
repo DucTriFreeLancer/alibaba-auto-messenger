@@ -78,7 +78,8 @@ const process = async () => {
 	for (let message of messages) {
 		switch (message.type) {
 			case MESSAGE_TYPE_TEXT:
-				await sendMessage(message.value);
+				if (typeof message.value === 'string' && message.value.trim().length > 0)
+					await sendMessage(message.value);
 				break;
 			case MESSAGE_TYPE_FILE:
 				sendFile(message.value);
