@@ -32,7 +32,6 @@
 		URL_COLUMN_INDEX
 	} from "@/shared/settings";
 	import {Keys, Storage} from "@/shared/storage";
-	import {randomWait} from "@/shared/wait";
 	import {toColumnName} from "@/shared/toColumnName";
 
 	export default {
@@ -58,11 +57,7 @@
 					const onRemoved = async (tabId) => {
 						if (tab.id !== tabId) return;
 
-						await Storage.reset(Keys.Current);
-						await randomWait();
-
 						chrome.tabs.onRemoved.removeListener(onRemoved);
-
 						resolve();
 					}
 
@@ -115,8 +110,10 @@
 
 						for (let {index, url} of mapped) {
 							try {
-								await this.$log(`Processing (URL=${url})`);
 								await this.process(url);
+
+								await this.$log(`Processing (URL=${url})`);
+								await this.$wait({min: 5 * 60 * 1000, max: 10 * 60 * 1000});
 							} catch (error) {
 								await this.$log(`An error occurred while processing the current page: ${JSON.stringify(error)}`);
 								console.trace();

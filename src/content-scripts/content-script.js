@@ -1,4 +1,4 @@
-import {randomWait} from "@/shared/wait";
+import {randomValue, wait} from "@/shared/wait";
 import {Keys, Storage} from "@/shared/storage";
 import {FIRST_MESSAGE, SECOND_MESSAGE, THIRD_MESSAGE} from "@/shared/settings";
 
@@ -85,7 +85,8 @@ const process = async () => {
 				break;
 		}
 
-		await randomWait()
+		const timeout = randomValue({min: 15 * 1000, max: 20 * 1000});
+		await wait(timeout);
 	}
 
 	chrome.runtime.sendMessage({text: 'close'});
@@ -94,18 +95,22 @@ const process = async () => {
 const init = async () => {
 	await waitFor(() => document.readyState === 'complete');
 
-	let url = new URL(document.location.href);
-	switch (url.hostname) {
-		case 'onetalk.alibaba.com':
-			process();
-			break;
-		default:
-			const shouldProcessURL = await Storage.get(Keys.Current);
-			if (typeof shouldProcessURL === "string") {
-				let value = new URL(shouldProcessURL);
-				if (value.hostname === url.hostname && value.pathname === url.pathname) open();
-			}
-			break;
+	const currentURL = new URL(document.location.href);
+	const shouldProcessURL = await Storage.get(Keys.Current);
+	const url = new URL((window.location !== window.parent.location) ? document.referrer : document.location.href);
+
+	if (typeof shouldProcessURL !== "string") return;
+
+	let value = new URL(shouldProcessURL);
+	if (value.hostname === url.hostname && value.pathname === url.pathname) {
+		switch (currentURL.hostname) {
+			case 'onetalk.alibaba.com':
+				process();
+				break;
+			default:
+				open();
+				break;
+		}
 	}
 }
 
