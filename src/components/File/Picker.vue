@@ -2,9 +2,9 @@
 	<div class="file-picker">
 		<div v-if="hasValue" class="alert alert-primary alert-dismissible" role="alert">
 			<span>{{ label }}</span>
-			<button type="button" class="btn-close" @click="reset"></button>
+			<button :disabled="disabled" class="btn-close" type="button" @click="reset"></button>
 		</div>
-		<input v-else class="form-control" type="file" v-bind="$attrs" @input="onInput"/>
+		<input v-else :disabled="disabled" class="form-control" type="file" v-bind="$attrs" @input="onInput"/>
 	</div>
 </template>
 
@@ -35,10 +35,15 @@
 			value: {
 				type: Object,
 				default: () => ({})
+			},
+			disabled: {
+				type: Boolean,
+				default: false,
 			}
 		},
 		methods: {
 			reset() {
+				if (this.disabled) return;
 				this.$emit('input', null)
 			},
 			async onInput($event) {

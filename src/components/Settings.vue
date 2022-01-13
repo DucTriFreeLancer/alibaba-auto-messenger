@@ -6,14 +6,14 @@
 				<div v-for="group in groups" :key="group.name" class="row g-3" v-bind="group.wrapper.props">
 					<div v-for="field in group.fields" :key="field.name" v-bind="field.wrapper.props">
 						<label :for="field.name" class="form-label">{{ field.label }}</label>
-						<component :is="field.tag" :id="field.name" :value="value[field.name]" v-bind="field.props" @input="onInput(field, $event)">
+						<component :is="field.tag" :id="field.name" :disabled="processing" :value="value[field.name]" v-bind="field.props" @input="onInput(field, $event)">
 							{{ value[field.name] }}
 						</component>
 					</div>
 				</div>
 			</div>
 			<div class="col-12 d-grid">
-				<button type="submit" class="btn btn-primary">Start</button>
+				<button type="submit" class="btn btn-primary" :disabled="processing">Start</button>
 			</div>
 		</div>
 	</form>
@@ -38,6 +38,7 @@
 	export default {
 		name: "Settings",
 		data: () => ({
+			processing: false,
 			context: 'SETTINGS',
 			groups: [
 				{
@@ -69,70 +70,78 @@
 				});
 			},
 			async onSubmit() {
-				const sheetName = this.value[SHEET_NAME];
+				if (this.processing) return;
 
-				const numberOfRowsToSkip = parseInt(this.value[NUMBER_OF_ROWS_TO_SKIP]) + 1;
-				const numberOfRowsToProcess = parseInt(this.value[NUMBER_OF_ROWS_TO_PROCESS]) - 1;
+				try {
+					this.processing = true;
 
-				const lastRowNumber = numberOfRowsToSkip + numberOfRowsToProcess;
+					const sheetName = this.value[SHEET_NAME];
 
-				this.$log('Fetching the spreadsheet...');
-				const response = await this.$store.dispatch('sheets/get', {
-					spreadsheetId: this.value[SPREADSHEET_ID],
-					range: `'${sheetName}'!${numberOfRowsToSkip}:${lastRowNumber}`
-				});
+					const numberOfRowsToSkip = parseInt(this.value[NUMBER_OF_ROWS_TO_SKIP]) + 1;
+					const numberOfRowsToProcess = parseInt(this.value[NUMBER_OF_ROWS_TO_PROCESS]) - 1;
 
-				if (response.error) {
-					this.$log(`An error occurred while fetching the spreadsheet: ${JSON.stringify(response.error)}`)
-					this.$log(`Resetting the authorization token`);
+					const lastRowNumber = numberOfRowsToSkip + numberOfRowsToProcess;
 
-					this.$store.dispatch('auth/reset');
-				} else {
-					const columns = {
-						URL: characterToIndex(this.value[URL_COLUMN_INDEX]) - 1,
-						STATUS: characterToIndex(this.value[STATUS_COLUMN_INDEX]) - 1
-					};
+					this.$log('Fetching the spreadsheet...');
+					const response = await this.$store.dispatch('sheets/get', {
+						spreadsheetId: this.value[SPREADSHEET_ID],
+						range: `'${sheetName}'!${numberOfRowsToSkip}:${lastRowNumber}`
+					});
 
-					const {values} = response;
+					if (response.error) {
+						this.$log(`An error occurred while fetching the spreadsheet: ${JSON.stringify(response.error)}`)
+						this.$log(`Resetting the authorization token`);
 
-					this.$log(`Found ${values.length} rows.`);
+						this.$store.dispatch('auth/reset');
+					} else {
+						const columns = {
+							URL: characterToIndex(this.value[URL_COLUMN_INDEX]) - 1,
+							STATUS: characterToIndex(this.value[STATUS_COLUMN_INDEX]) - 1
+						};
 
-					const mapped = values.map((value, index) => ({
-						index,
-						url: value[columns.URL] ?? '',
-						status: value[columns.STATUS] ?? ''
-					})).filter(item => item.url.length !== 0 && item.status.length === 0);
+						const {values} = response;
 
-					if (values.length > mapped.length) {
-						this.$log(`While mapping values, we've skipped ${Math.abs(values.length - mapped.length)} rows.`);
-					}
+						this.$log(`Found ${values.length} rows.`);
 
-					for (let {index, url} of mapped) {
-						try {
-							await this.$log(`Processing (URL=${url})`);
-							await this.process(url);
-						} catch (error) {
-							await this.$log(`An error occurred while processing the current page: ${JSON.stringify(error)}`);
-							console.trace();
-						} finally {
-							await this.$log(`Processed. (URL=${url})`);
+						const mapped = values.map((value, index) => ({
+							index,
+							url: value[columns.URL] ?? '',
+							status: value[columns.STATUS] ?? ''
+						})).filter(item => item.url.length !== 0 && item.status.length === 0);
 
-							await this.$log(`Updating (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
-							const rowIndex = index + numberOfRowsToSkip;
-							const columnName = toColumnName(columns.STATUS + 1);
+						if (values.length > mapped.length) {
+							this.$log(`While mapping values, we've skipped ${Math.abs(values.length - mapped.length)} rows.`);
+						}
 
-							await this.$store.dispatch('sheets/update', {
-								spreadsheetId: this.value[SPREADSHEET_ID],
-								range: `'${sheetName}'!${columnName}${rowIndex}`,
-								value: {
-									values: [
-										[true]
-									]
-								}
-							});
-							await this.$log(`Updated (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
+						for (let {index, url} of mapped) {
+							try {
+								await this.$log(`Processing (URL=${url})`);
+								await this.process(url);
+							} catch (error) {
+								await this.$log(`An error occurred while processing the current page: ${JSON.stringify(error)}`);
+								console.trace();
+							} finally {
+								await this.$log(`Processed. (URL=${url})`);
+
+								await this.$log(`Updating (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
+								const rowIndex = index + numberOfRowsToSkip;
+								const columnName = toColumnName(columns.STATUS + 1);
+
+								await this.$store.dispatch('sheets/update', {
+									spreadsheetId: this.value[SPREADSHEET_ID],
+									range: `'${sheetName}'!${columnName}${rowIndex}`,
+									value: {
+										values: [
+											[true]
+										]
+									}
+								});
+								await this.$log(`Updated (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
+							}
 						}
 					}
+				} finally {
+					this.processing = false;
 				}
 			},
 			async onInput(field, $event) {
