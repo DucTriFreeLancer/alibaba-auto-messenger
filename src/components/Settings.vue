@@ -110,10 +110,8 @@
 
 						for (let {index, url} of mapped) {
 							try {
-								await this.process(url);
-
 								await this.$log(`Processing (URL=${url})`);
-								await this.$wait({min: 5 * 60 * 1000, max: 10 * 60 * 1000});
+								await this.process(url);
 							} catch (error) {
 								await this.$log(`An error occurred while processing the current page: ${JSON.stringify(error)}`);
 								console.trace();
@@ -134,6 +132,7 @@
 									}
 								});
 								await this.$log(`Updated (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
+								await this.$wait({min: 5 * 60 * 1000, max: 10 * 60 * 1000});
 							}
 						}
 					}

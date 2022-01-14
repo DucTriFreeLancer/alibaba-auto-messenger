@@ -16,6 +16,32 @@ const open = () => {
 	document.querySelector('.action-alitalk .atm-wrapper').click();
 };
 
+const base64toBlobOrFile = (base64Data, {contentType, fileName}) => {
+	contentType = contentType || '';
+	fileName = fileName || '';
+
+	let sliceSize = 1024;
+	let byteCharacters = atob(base64Data);
+	let bytesLength = byteCharacters.length;
+	let slicesCount = Math.ceil(bytesLength / sliceSize);
+	let byteArrays = new Array(slicesCount);
+
+	for (let sliceIndex = 0; sliceIndex < slicesCount; ++sliceIndex) {
+		let begin = sliceIndex * sliceSize;
+		let end = Math.min(begin + sliceSize, bytesLength);
+
+		let bytes = new Array(end - begin);
+		for (let offset = begin, i = 0; offset < end; ++i, ++offset) {
+			bytes[i] = byteCharacters[offset].charCodeAt(0);
+		}
+		byteArrays[sliceIndex] = new Uint8Array(bytes);
+	}
+
+	if (fileName)
+		return new File(byteArrays, fileName, {type: contentType});
+
+	return new Blob(byteArrays, {type: contentType});
+};
 
 /**
  * @param options {{name: string, type: string, value: string}}
@@ -23,15 +49,9 @@ const open = () => {
  */
 const createFile = async (options) => {
 	const {name, type, value} = options;
-
 	const decodedValue = value.split(';base64,')[1];
-	const uInt8Array = new Uint8Array(decodedValue.length);
 
-	for (let i = 0; i < decodedValue.length; ++i) {
-		uInt8Array[i] = decodedValue.charCodeAt(i);
-	}
-
-	return new File([uInt8Array], name, {type});
+	return base64toBlobOrFile(decodedValue, {contentType: type, fileName: name});
 };
 
 const MESSAGE_TYPE_TEXT = 'TEXT';
