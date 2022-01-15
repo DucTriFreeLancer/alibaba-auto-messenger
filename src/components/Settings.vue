@@ -37,6 +37,7 @@
 	export default {
 		name: "Settings",
 		data: () => ({
+			interval: -1,
 			processing: false,
 			context: 'SETTINGS',
 			groups: [
@@ -47,22 +48,61 @@
 				},
 			],
 		}),
+		mounted() {
+			this.keepAlive();
+		},
 		methods: {
+			keepAlive() {
+				this.interval = setInterval(() => this.fetch(), 60 * 1000);
+			},
+			fetch() {
+				const {sheetName, numberOfRowsToSkip, lastRowNumber} = this.fetchOptions;
+
+				this.$log('Fetching the spreadsheet...');
+				return this.$store.dispatch('sheets/get', {
+					spreadsheetId: this.value[SPREADSHEET_ID],
+					range: `'${sheetName}'!${numberOfRowsToSkip}:${lastRowNumber}`
+				});
+			},
 			process(url) {
-				return new Promise(async (resolve) => {
+				return new Promise(async (resolve, reject) => {
 					await Storage.set(Keys.Current, url);
 
 					/** @type {chrome.tabs.Tab} */
-					const tab = await this.$createTab(url);
-					const onRemoved = async (tabId) => {
-						if (tab.id !== tabId) return;
+					let tab = await this.$createTab(url);
 
+					const rejectionTimeout = setTimeout(() => {
+						if (tab === null) return;
+						const tabId = tab.id;
+
+						tab = null;
+						chrome.tabs.remove(tabId);
+						Storage.reset(Keys.Current);
+
+						reject();
+					}, 60 * 1000);
+
+
+					const onRemoved = async (tabId) => {
+						if (tab === null || tab.id !== tabId) return;
+
+						tab = null;
+						clearTimeout(rejectionTimeout);
 						chrome.tabs.onRemoved.removeListener(onRemoved);
+
 						resolve();
 					}
 
 					chrome.tabs.onRemoved.addListener(onRemoved)
 				});
+			},
+			async update(range, values) {
+				await this.$log(`Updating (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
+				await this.$store.dispatch('sheets/update', {
+					range, value: {values},
+					spreadsheetId: this.value[SPREADSHEET_ID],
+				});
+				await this.$log(`Updated (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
 			},
 			async onSubmit() {
 				if (this.processing) return;
@@ -70,18 +110,8 @@
 				try {
 					this.processing = true;
 
-					const sheetName = this.value[SHEET_NAME];
-
-					const numberOfRowsToSkip = parseInt(this.value[NUMBER_OF_ROWS_TO_SKIP]) + 1;
-					const numberOfRowsToProcess = parseInt(this.value[NUMBER_OF_ROWS_TO_PROCESS]) - 1;
-
-					const lastRowNumber = numberOfRowsToSkip + numberOfRowsToProcess;
-
-					this.$log('Fetching the spreadsheet...');
-					const response = await this.$store.dispatch('sheets/get', {
-						spreadsheetId: this.value[SPREADSHEET_ID],
-						range: `'${sheetName}'!${numberOfRowsToSkip}:${lastRowNumber}`
-					});
+					const {sheetName, numberOfRowsToSkip} = this.fetchOptions;
+					const response = await this.fetch();
 
 					if (response.error) {
 						this.$log(`An error occurred while fetching the spreadsheet: ${JSON.stringify(response.error)}`)
@@ -109,29 +139,21 @@
 						}
 
 						for (let {index, url} of mapped) {
+							const rowIndex = index + numberOfRowsToSkip;
+							const columnName = toColumnName(columns.STATUS + 1);
+
 							try {
 								await this.$log(`Processing (URL=${url})`);
 								await this.process(url);
-							} catch (error) {
-								await this.$log(`An error occurred while processing the current page: ${JSON.stringify(error)}`);
-								console.trace();
-							} finally {
 								await this.$log(`Processed. (URL=${url})`);
 
-								await this.$log(`Updating (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
-								const rowIndex = index + numberOfRowsToSkip;
-								const columnName = toColumnName(columns.STATUS + 1);
+								await this.update(`'${sheetName}'!${columnName}${rowIndex}`, [[true]]);
+							} catch (error) {
+								console.trace();
 
-								await this.$store.dispatch('sheets/update', {
-									spreadsheetId: this.value[SPREADSHEET_ID],
-									range: `'${sheetName}'!${columnName}${rowIndex}`,
-									value: {
-										values: [
-											[true]
-										]
-									}
-								});
-								await this.$log(`Updated (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
+								await this.$log(`An error occurred while processing the current page: ${JSON.stringify(error)}`);
+								await this.update(`'${sheetName}'!${columnName}${rowIndex}`, [[false]]);
+							} finally {
 								await this.$wait({min: 5 * 60 * 1000, max: 10 * 60 * 1000});
 							}
 						}
@@ -161,6 +183,14 @@
 			}
 		},
 		computed: {
+			fetchOptions() {
+				const sheetName = this.value[SHEET_NAME];
+				const numberOfRowsToSkip = parseInt(this.value[NUMBER_OF_ROWS_TO_SKIP]) + 1;
+				const numberOfRowsToProcess = parseInt(this.value[NUMBER_OF_ROWS_TO_PROCESS]) - 1;
+				const lastRowNumber = numberOfRowsToSkip + numberOfRowsToProcess;
+
+				return {sheetName, numberOfRowsToSkip, numberOfRowsToProcess, lastRowNumber};
+			},
 			value: {
 				get() {
 					return this.$store.state.settings.value;
@@ -170,6 +200,10 @@
 				}
 			}
 		},
+		beforeDestroy() {
+			clearInterval(this.interval);
+			this.interval = -1;
+		}
 	}
 </script>
 
