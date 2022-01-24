@@ -3,13 +3,8 @@
 		<h4 class="mt-0">Settings</h4>
 		<div class="row g-3">
 			<div class="columns-wrapper">
-				<div v-for="group in groups" :key="group.name" class="row g-3" v-bind="group.wrapper.props">
-					<div v-for="field in group.fields" :key="field.name" v-bind="field.wrapper.props">
-						<label :for="field.name" class="form-label">{{ field.label }}</label>
-						<component :is="field.tag" :id="field.name" :disabled="processing" :value="value[field.name]" v-bind="field.props" @input="onInput(field, $event)">
-							{{ value[field.name] }}
-						</component>
-					</div>
+				<div class="row g-3 col-12">
+					<Field v-for="field in fields" :key="field.name" :disabled="processing" :field="field" :value="value[field.name]" @input="onInput(field, $event)"/>
 				</div>
 			</div>
 			<div class="col-12 d-grid">
@@ -23,7 +18,6 @@
 	import {characterToIndex} from "@/shared/characterToIndex";
 	import {
 		fields,
-		fullWidthWrapper,
 		NUMBER_OF_ROWS_TO_PROCESS,
 		NUMBER_OF_ROWS_TO_SKIP,
 		SHEET_NAME,
@@ -33,20 +27,16 @@
 	} from "@/shared/settings";
 	import {Keys, Storage} from "@/shared/storage";
 	import {toColumnName} from "@/shared/toColumnName";
+	import Field from "@/components/Field";
 
 	export default {
 		name: "Settings",
+		components: {Field},
 		data: () => ({
 			interval: -1,
 			processing: false,
 			context: 'SETTINGS',
-			groups: [
-				{
-					name: 'left',
-					wrapper: fullWidthWrapper,
-					fields: fields
-				},
-			],
+			fields,
 		}),
 		mounted() {
 			this.keepAlive();
@@ -57,6 +47,7 @@
 			},
 			fetch() {
 				const {sheetName, numberOfRowsToSkip, lastRowNumber} = this.fetchOptions;
+				if (!sheetName || !numberOfRowsToSkip || !lastRowNumber) return;
 
 				this.$log('Fetching the spreadsheet...');
 				return this.$store.dispatch('sheets/get', {
@@ -163,22 +154,12 @@
 				}
 			},
 			async onInput(field, $event) {
-				const {tag, name} = field;
-
-				let value;
-				if (typeof tag === 'object') {
-					if ('onInputCallback' in field && typeof field.onInputCallback === 'function') {
-						value = field.onInputCallback($event);
-					} else {
-						throw new Error('onInputCallback is not defined or is not a valid function.');
-					}
-				} else {
-					value = $event.target.value
-				}
+				console.log({field, $event});
+				const {name} = field;
 
 				this.value = {
 					...this.value,
-					[name]: value
+					[name]: $event
 				}
 			}
 		},

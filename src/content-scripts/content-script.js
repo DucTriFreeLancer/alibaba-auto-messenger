@@ -1,6 +1,6 @@
 import {randomValue, wait} from "@/shared/wait";
 import {Keys, Storage} from "@/shared/storage";
-import {FIRST_MESSAGE, SECOND_MESSAGE, THIRD_MESSAGE} from "@/shared/settings";
+import {FILES, FIRST_MESSAGE, THIRD_MESSAGE} from "@/shared/settings";
 
 const waitFor = (callback) => new Promise(resolve => {
 	let interval = setInterval(() => {
@@ -90,10 +90,14 @@ const process = async () => {
 	const settings = await Storage.get(Keys.Settings);
 
 	const messages = [
-		{type: MESSAGE_TYPE_TEXT, value: settings[FIRST_MESSAGE]},
-		{type: MESSAGE_TYPE_FILE, value: await createFile(settings[SECOND_MESSAGE])},
-		{type: MESSAGE_TYPE_TEXT, value: settings[THIRD_MESSAGE]}
+		{type: MESSAGE_TYPE_TEXT, value: settings[FIRST_MESSAGE]}
 	];
+
+	for (let file of settings[FILES]) {
+		messages.push({type: MESSAGE_TYPE_FILE, value: await createFile(file)});
+	}
+
+	messages.push({type: MESSAGE_TYPE_TEXT, value: settings[THIRD_MESSAGE]})
 
 	for (let message of messages) {
 		switch (message.type) {

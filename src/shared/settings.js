@@ -1,3 +1,4 @@
+import Repeater from '@/components/Repeater';
 import Picker from "@/components/File/Picker";
 
 export const SPREADSHEET_ID = 'spreadsheetId';
@@ -7,8 +8,11 @@ export const NUMBER_OF_ROWS_TO_PROCESS = 'numberOfRowsToProcess';
 export const URL_COLUMN_INDEX = 'URLColumnIndex';
 export const STATUS_COLUMN_INDEX = 'statusColumnIndex';
 
+export const FILES = 'files';
+
 export const FIRST_MESSAGE = 'firstMessage';
 export const SECOND_MESSAGE = 'file';
+export const FILE_MESSAGE = 'file';
 export const THIRD_MESSAGE = 'thirdMessage';
 
 export const baseProps = {
@@ -107,14 +111,25 @@ let messageFields = [
 		wrapper: fullWidthWrapper
 	},
 	{
-		name: SECOND_MESSAGE,
-		label: 'File (Second Message)',
-		tag: Picker,
-		props: {
-			required: true
-		},
-		wrapper: fullWidthWrapper,
+		name: FILES,
+		label: 'Messages',
+		tag: Repeater,
 		onInputCallback: (event) => event,
+		props: {
+			...baseProps,
+			class: '',
+			field: {
+				name: FILE_MESSAGE,
+				label: 'File',
+				tag: Picker,
+				props: {
+					required: true
+				},
+				wrapper: fullWidthWrapper,
+				onInputCallback: (event) => event,
+			},
+		},
+		wrapper: fullWidthWrapper
 	},
 	{
 		name: THIRD_MESSAGE,

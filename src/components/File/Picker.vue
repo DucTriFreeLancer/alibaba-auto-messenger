@@ -4,7 +4,7 @@
 			<span>{{ label }}</span>
 			<button :disabled="disabled" class="btn-close" type="button" @click="reset"></button>
 		</div>
-		<input v-else :disabled="disabled" class="form-control" type="file" v-bind="$attrs" @input="onInput"/>
+		<input v-else ref="input" :disabled="disabled" class="form-control" type="file" v-bind="$attrs" @input="onInput"/>
 	</div>
 </template>
 
@@ -39,6 +39,10 @@
 			disabled: {
 				type: Boolean,
 				default: false,
+			},
+			resetOnInput: {
+				type: Boolean,
+				default: false,
 			}
 		},
 		methods: {
@@ -57,6 +61,8 @@
 					name, type, size,
 					value: await getBase64(file)
 				});
+
+				this.$refs.input.value = "";
 			}
 		},
 		computed: {
@@ -72,3 +78,11 @@
 		}
 	}
 </script>
+
+<style lang="scss" scoped>
+	.file-picker {
+		.alert {
+			margin-bottom: 0;
+		}
+	}
+</style>
