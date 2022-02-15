@@ -1,3 +1,6 @@
+export const MINIMUM_DELAY_PER_MESSAGE = 15 * 1000;
+export const MAXIMUM_DELAY_PER_MESSAGE = 20 * 1000;
+
 export const wait = (timeout) => new Promise(resolve => {
 	setTimeout(() => resolve(), timeout)
 });

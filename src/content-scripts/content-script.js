@@ -1,4 +1,4 @@
-import {randomValue, wait} from "@/shared/wait";
+import {MAXIMUM_DELAY_PER_MESSAGE, MINIMUM_DELAY_PER_MESSAGE, randomValue, wait} from "@/shared/wait";
 import {Keys, Storage} from "@/shared/storage";
 import {FILES, FIRST_MESSAGE, THIRD_MESSAGE} from "@/shared/settings";
 
@@ -110,7 +110,7 @@ const process = async () => {
 				break;
 		}
 
-		const timeout = randomValue({min: 15 * 1000, max: 20 * 1000});
+		const timeout = randomValue({min: MINIMUM_DELAY_PER_MESSAGE, max: MAXIMUM_DELAY_PER_MESSAGE});
 		await wait(timeout);
 	}
 

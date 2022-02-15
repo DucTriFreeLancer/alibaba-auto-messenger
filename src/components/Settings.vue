@@ -18,16 +18,20 @@
 	import {characterToIndex} from "@/shared/characterToIndex";
 	import {
 		fields,
+		FILES,
+		FIRST_MESSAGE,
 		NUMBER_OF_ROWS_TO_PROCESS,
 		NUMBER_OF_ROWS_TO_SKIP,
 		SHEET_NAME,
 		SPREADSHEET_ID,
 		STATUS_COLUMN_INDEX,
+		THIRD_MESSAGE,
 		URL_COLUMN_INDEX
 	} from "@/shared/settings";
 	import {Keys, Storage} from "@/shared/storage";
 	import {toColumnName} from "@/shared/toColumnName";
 	import Field from "@/components/Field";
+	import {MAXIMUM_DELAY_PER_MESSAGE} from "@/shared/wait";
 
 	export default {
 		name: "Settings",
@@ -55,6 +59,20 @@
 					range: `'${sheetName}'!${numberOfRowsToSkip}:${lastRowNumber}`
 				});
 			},
+			numberOfMessages() {
+				let numberOfMessages = 0;
+
+				if (this.value[FIRST_MESSAGE] && this.value[FIRST_MESSAGE].trim().length > 0)
+					numberOfMessages += 1;
+
+				if (this.value[FILES] && this.value[FILES].length)
+					numberOfMessages += this.value[FILES].length;
+
+				if (this.value[THIRD_MESSAGE] && this.value[THIRD_MESSAGE].trim().length > 0)
+					numberOfMessages += 1;
+
+				return numberOfMessages;
+			},
 			process(url) {
 				return new Promise(async (resolve, reject) => {
 					await Storage.set(Keys.Current, url);
@@ -71,7 +89,7 @@
 						Storage.reset(Keys.Current);
 
 						reject();
-					}, 60 * 1000);
+					}, (MAXIMUM_DELAY_PER_MESSAGE + 5 * 1000) * this.numberOfMessages() + (60 * 1000));
 
 
 					const onRemoved = async (tabId) => {
