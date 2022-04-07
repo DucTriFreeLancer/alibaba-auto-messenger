@@ -1,7 +1,7 @@
-import {MAXIMUM_DELAY_PER_MESSAGE, MINIMUM_DELAY_PER_MESSAGE, randomValue, wait} from "@/shared/wait";
+import {randomValue, wait} from "@/shared/wait";
 import {Keys, Storage} from "@/shared/storage";
-import {FILES, FIRST_MESSAGE, THIRD_MESSAGE} from "@/shared/settings";
-
+import {FILES, FIRST_MESSAGE, THIRD_MESSAGE,MINIMUM_DELAY_TIME_PER_MESSAGE,MAXIMUM_DELAY_TIME_PER_MESSAGE} from "@/shared/settings";
+import Spinner from "node-spintax/Spinner";
 const waitFor = (callback) => new Promise(resolve => {
 	let interval = setInterval(() => {
 		if (callback() === true) {
@@ -68,8 +68,17 @@ const process = async () => {
 	 */
 	const sendMessage = async (text) => {
 		await waitFor(() => document.querySelector(`${prefix} .send-textarea`) !== null);
-
-		document.querySelector(`${prefix} .send-textarea`).value = text;
+		await waitFor(() => document.querySelector(`${prefix} .contact-name`) !== null);
+		const processCurrentCompany = await Storage.get(Keys.CurrentCompany)??'';
+		const processCurrentContactName = document.querySelector(`${prefix} .contact-name`).innerHTML??'';
+		if (text.indexOf('$name') > -1) {
+			text = text.replace(/\$name/g,processCurrentContactName);
+		}
+		if (text.indexOf('$company') > -1) {
+			text = text.replace(/\$company/g,processCurrentCompany);
+		}
+		var spinner = new Spinner(text);		
+		document.querySelector(`${prefix} .send-textarea`).value = spinner.unspinRandom(1, true)[0];
 		document.querySelector(`${prefix} .im-next-btn`).click();
 	}
 
@@ -88,7 +97,6 @@ const process = async () => {
 	}
 
 	const settings = await Storage.get(Keys.Settings);
-
 	const messages = [
 		{type: MESSAGE_TYPE_TEXT, value: settings[FIRST_MESSAGE]}
 	];
@@ -98,19 +106,18 @@ const process = async () => {
 	}
 
 	messages.push({type: MESSAGE_TYPE_TEXT, value: settings[THIRD_MESSAGE]})
-
 	for (let message of messages) {
 		switch (message.type) {
 			case MESSAGE_TYPE_TEXT:
-				if (typeof message.value === 'string' && message.value.trim().length > 0)
+				if (typeof message.value === 'string' && message.value.trim().length > 0){
 					await sendMessage(message.value);
+				}
 				break;
 			case MESSAGE_TYPE_FILE:
 				sendFile(message.value);
 				break;
 		}
-
-		const timeout = randomValue({min: MINIMUM_DELAY_PER_MESSAGE, max: MAXIMUM_DELAY_PER_MESSAGE});
+		const timeout = randomValue({min: parseInt(settings[MINIMUM_DELAY_TIME_PER_MESSAGE])*1000, max: parseInt(settings[MAXIMUM_DELAY_TIME_PER_MESSAGE])*1000});
 		await wait(timeout);
 	}
 
@@ -125,7 +132,6 @@ const init = async () => {
 	const url = new URL((window.location !== window.parent.location) ? document.referrer : document.location.href);
 
 	if (typeof shouldProcessURL !== "string") return;
-
 	let value = new URL(shouldProcessURL);
 	if (value.hostname === url.hostname && value.pathname === url.pathname) {
 		switch (currentURL.hostname) {

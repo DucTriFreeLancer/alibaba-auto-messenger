@@ -16,6 +16,7 @@ export const Keys = {
 	Settings: 'extension.settings',
 	Token: 'extension.auth.token',
 	Current: 'extension.current.url',
+	CurrentCompany: 'extension.current.company',
 }
 
 export const Storage = {

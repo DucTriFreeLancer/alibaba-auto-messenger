@@ -5,6 +5,10 @@ export const SPREADSHEET_ID = 'spreadsheetId';
 export const SHEET_NAME = 'sheetName';
 export const NUMBER_OF_ROWS_TO_SKIP = 'numberOfRowsToSkip';
 export const NUMBER_OF_ROWS_TO_PROCESS = 'numberOfRowsToProcess';
+export const MINIMUM_DELAY_TIME_PER_JOB = 'minimumOfWaitTimePerJob';
+export const MAXIMUM_DELAY_TIME_PER_JOB = 'maximumOfWaitTimePerJob';
+export const MINIMUM_DELAY_TIME_PER_MESSAGE = 'minimumOfWaitTimePerMessage';
+export const MAXIMUM_DELAY_TIME_PER_MESSAGE = 'maximumOfWaitTimePerMessage';
 export const URL_COLUMN_INDEX = 'URLColumnIndex';
 export const STATUS_COLUMN_INDEX = 'statusColumnIndex';
 
@@ -95,6 +99,50 @@ let settingFields = [
 			...baseInputProps,
 			type: 'number',
 			min: 1,
+		},
+		wrapper: halfWidthWrapper
+	},
+	{
+		name: MINIMUM_DELAY_TIME_PER_JOB,
+		label: 'Minimum wait time per job',
+		tag: 'input',
+		props: {
+			...baseInputProps,
+			type: 'number',
+			min: 1,
+		},
+		wrapper: halfWidthWrapper
+	},
+	{
+		name: MAXIMUM_DELAY_TIME_PER_JOB,
+		label: 'Maximum wait time per job',
+		tag: 'input',
+		props: {
+			...baseInputProps,
+			type: 'number',
+			min: 3,
+		},
+		wrapper: halfWidthWrapper
+	},
+	{
+		name: MINIMUM_DELAY_TIME_PER_MESSAGE,
+		label: 'Minimum wait time per message',
+		tag: 'input',
+		props: {
+			...baseInputProps,
+			type: 'number',
+			min: 5,
+		},
+		wrapper: halfWidthWrapper
+	},
+	{
+		name: MAXIMUM_DELAY_TIME_PER_MESSAGE,
+		label: 'Maximum wait time per message',
+		tag: 'input',
+		props: {
+			...baseInputProps,
+			type: 'number',
+			min: 10,
 		},
 		wrapper: halfWidthWrapper
 	},

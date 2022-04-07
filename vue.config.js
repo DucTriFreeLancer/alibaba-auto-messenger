@@ -1,4 +1,7 @@
 module.exports = {
+	configureWebpack: {
+		devtool: 'source-map'
+	},
 	pages: {
 		index: {
 			template: 'public/index.html',

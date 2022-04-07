@@ -5,7 +5,7 @@ import store from './store';
 import {randomValue, wait} from "@/shared/wait";
 
 Vue.config.productionTip = false;
-
+Vue.config.devtools = true;
 /**
  * @param message {string}
  * @return {Promise<any>}

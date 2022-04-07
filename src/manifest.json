@@ -12,6 +12,7 @@
         "storage",
         "activeTab",
         "<all_urls>",
+        "unlimitedStorage",
         "*://*/*"
     ],
     "icons": {
