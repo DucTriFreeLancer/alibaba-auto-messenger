@@ -1,6 +1,7 @@
 import {randomValue, wait} from "@/shared/wait";
 import {Keys, Storage} from "@/shared/storage";
-import {FILES, FIRST_MESSAGE, THIRD_MESSAGE,MINIMUM_DELAY_TIME_PER_MESSAGE,MAXIMUM_DELAY_TIME_PER_MESSAGE} from "@/shared/settings";
+import {FILES, FIRST_MESSAGE, THIRD_MESSAGE,MINIMUM_DELAY_TIME_PER_MESSAGE,MAXIMUM_DELAY_TIME_PER_MESSAGE,RANDOM_FILE_MESSAGE} from "@/shared/settings";
+import {IMAGE_TYPE, EXCEL_TYPE} from "@/shared/settings";
 import Spinner from "node-spintax/Spinner";
 const waitFor = (callback) => new Promise(resolve => {
 	let interval = setInterval(() => {
@@ -77,7 +78,7 @@ const process = async () => {
 		if (text.indexOf('$company') > -1) {
 			text = text.replace(/\$company/g,processCurrentCompany);
 		}
-		var spinner = new Spinner(text);		
+		var spinner = new Spinner(text);
 		document.querySelector(`${prefix} .send-textarea`).value = spinner.unspinRandom(1, true)[0];
 		document.querySelector(`${prefix} .im-next-btn`).click();
 	}
@@ -100,11 +101,30 @@ const process = async () => {
 	const messages = [
 		{type: MESSAGE_TYPE_TEXT, value: settings[FIRST_MESSAGE]}
 	];
-
-	for (let file of settings[FILES]) {
-		messages.push({type: MESSAGE_TYPE_FILE, value: await createFile(file)});
-	}
-
+  const random_files= settings[RANDOM_FILE_MESSAGE];
+  if(random_files===1){
+    var imageFiltereds = settings[FILES].filter((image) => {
+      let ext = image.name.substring(image.name.lastIndexOf(".") + 1, image.name.length).toLowerCase();
+      return IMAGE_TYPE.indexOf(ext) != -1
+    });
+    if(imageFiltereds.length>0){
+      var image = imageFiltereds[Math.floor(Math.random()*imageFiltereds.length)];
+      messages.push({type: MESSAGE_TYPE_FILE, value: await createFile(image)});
+    }
+    var excelFiltereds = settings[FILES].filter((excel) => {
+      let ext = excel.name.substring(excel.name.lastIndexOf(".") + 1, excel.name.length).toLowerCase();
+      return EXCEL_TYPE.indexOf(ext) != -1
+    });
+    if(excelFiltereds.length>0){
+      var excel = excelFiltereds[Math.floor(Math.random()*excelFiltereds.length)];
+      messages.push({type: MESSAGE_TYPE_FILE, value: await createFile(excel)});
+    }
+  }
+  else {
+    for (let file of settings[FILES]) {
+      messages.push({type: MESSAGE_TYPE_FILE, value: await createFile(file)});
+    }
+  }
 	messages.push({type: MESSAGE_TYPE_TEXT, value: settings[THIRD_MESSAGE]})
 	for (let message of messages) {
 		switch (message.type) {

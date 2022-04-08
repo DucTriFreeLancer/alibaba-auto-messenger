@@ -117,7 +117,6 @@
 				await this.$log(`Updated (SPREADSHEET_ID=${this.value[SPREADSHEET_ID]}`);
 			},
 			async onSubmit() {
-				debugger;
 				if (this.processing) return;
 
 				try {

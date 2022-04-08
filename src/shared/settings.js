@@ -11,6 +11,7 @@ export const MINIMUM_DELAY_TIME_PER_MESSAGE = 'minimumOfWaitTimePerMessage';
 export const MAXIMUM_DELAY_TIME_PER_MESSAGE = 'maximumOfWaitTimePerMessage';
 export const URL_COLUMN_INDEX = 'URLColumnIndex';
 export const STATUS_COLUMN_INDEX = 'statusColumnIndex';
+export const RANDOM_FILE_MESSAGE = "randomFileMessage"
 
 export const FILES = 'files';
 
@@ -18,6 +19,9 @@ export const FIRST_MESSAGE = 'firstMessage';
 export const SECOND_MESSAGE = 'file';
 export const FILE_MESSAGE = 'file';
 export const THIRD_MESSAGE = 'thirdMessage';
+
+export const IMAGE_TYPE = ["jpeg", "jpg", "png", "gif"];
+export const EXCEL_TYPE = ["xls", "xlsx"];
 
 export const baseProps = {
 	class: 'form-control',
@@ -145,6 +149,19 @@ let settingFields = [
 			min: 10,
 		},
 		wrapper: halfWidthWrapper
+	},
+  {
+		name: RANDOM_FILE_MESSAGE,
+		label: 'Randomly send only one file of each type',
+		tag: 'input',
+		props: {
+			...baseInputProps,
+      type:'checkbox',
+      class:'form-check-input ms-1',
+      required: false,
+      value: 1,
+		},
+		wrapper: fullWidthWrapper
 	},
 ];
 

@@ -1,7 +1,7 @@
 <template>
 	<div :key="field.name" v-bind="field.wrapper.props">
 		<label :for="field.name" class="form-label">{{ field.label }}</label>
-		<component :is="field.tag" :id="field.name" :disabled="disabled" :value="value" v-bind="field.props" @input="onInput($event)">
+		<component :is="field.tag" :id="field.name" :disabled="disabled" :value="value" :checked="value == 1 ? true: false" v-bind="field.props" @input="onInput($event)">
 			{{ value }}
 		</component>
 	</div>
