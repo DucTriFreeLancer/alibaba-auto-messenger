@@ -2,6 +2,7 @@ import {randomValue, wait} from "@/shared/wait";
 import {Keys, Storage} from "@/shared/storage";
 import {FILES, FIRST_MESSAGE, THIRD_MESSAGE,MINIMUM_DELAY_TIME_PER_MESSAGE,MAXIMUM_DELAY_TIME_PER_MESSAGE,RANDOM_FILE_MESSAGE} from "@/shared/settings";
 import {IMAGE_TYPE, EXCEL_TYPE} from "@/shared/settings";
+import ExcelJS from "exceljs";
 import Spinner from "node-spintax/Spinner";
 const waitFor = (callback) => new Promise(resolve => {
 	let interval = setInterval(() => {
@@ -17,10 +18,22 @@ const open = () => {
 	document.querySelector('.action-alitalk .atm-wrapper').click();
 };
 
-const base64toBlobOrFile = (base64Data, {contentType, fileName}) => {
+const base64toBlobOrFile = async (base64Data, {contentType, fileName}) => {
 	contentType = contentType || '';
 	fileName = fileName || '';
-
+  if(fileName){
+    let ext = fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length).toLowerCase();
+    if(EXCEL_TYPE.indexOf(ext) != -1){
+      const bufferBefore = new Buffer(base64Data,"base64");
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(bufferBefore);
+      const worksheet = workbook.getWorksheet(1)
+      worksheet.getCell('B2').value = await Storage.get(Keys.CurrentCompany)??'';
+      worksheet.getCell('B11').value = await Storage.get(Keys.Current)??'';
+      const bufferAfter = await workbook.xlsx.writeBuffer();
+      base64Data = bufferAfter.toString('base64');
+    }
+  }
 	let sliceSize = 1024;
 	let byteCharacters = atob(base64Data);
 	let bytesLength = byteCharacters.length;
@@ -52,7 +65,7 @@ const createFile = async (options) => {
 	const {name, type, value} = options;
 	const decodedValue = value.split(';base64,')[1];
 
-	return base64toBlobOrFile(decodedValue, {contentType: type, fileName: name});
+	return await base64toBlobOrFile(decodedValue, {contentType: type, fileName: name});
 };
 
 const MESSAGE_TYPE_TEXT = 'TEXT';
