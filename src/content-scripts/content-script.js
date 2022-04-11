@@ -1,7 +1,7 @@
 import {randomValue, wait} from "@/shared/wait";
 import {Keys, Storage} from "@/shared/storage";
 import {FILES, FIRST_MESSAGE, THIRD_MESSAGE,MINIMUM_DELAY_TIME_PER_MESSAGE,MAXIMUM_DELAY_TIME_PER_MESSAGE,RANDOM_FILE_MESSAGE} from "@/shared/settings";
-import {IMAGE_TYPE, EXCEL_TYPE} from "@/shared/settings";
+import {IMAGE_TYPE, EXCEL_TYPE,COMPANY_NAME_COLUMN_INDEX,COMPANY_URL_COLUMN_INDEX} from "@/shared/settings";
 import ExcelJS from "exceljs";
 import Spinner from "node-spintax/Spinner";
 const waitFor = (callback) => new Promise(resolve => {
@@ -28,8 +28,9 @@ const base64toBlobOrFile = async (base64Data, {contentType, fileName}) => {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(bufferBefore);
       const worksheet = workbook.getWorksheet(1)
-      worksheet.getCell('B2').value = await Storage.get(Keys.CurrentCompany)??'';
-      worksheet.getCell('B11').value = await Storage.get(Keys.Current)??'';
+	    const settings = await Storage.get(Keys.Settings);
+      worksheet.getCell(settings[COMPANY_NAME_COLUMN_INDEX]).value = await Storage.get(Keys.CurrentCompany)??'';
+      worksheet.getCell(settings[COMPANY_URL_COLUMN_INDEX]).value = await Storage.get(Keys.Current)??'';
       const bufferAfter = await workbook.xlsx.writeBuffer();
       base64Data = bufferAfter.toString('base64');
     }

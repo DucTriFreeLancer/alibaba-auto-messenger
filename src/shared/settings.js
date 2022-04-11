@@ -13,6 +13,9 @@ export const URL_COLUMN_INDEX = 'URLColumnIndex';
 export const STATUS_COLUMN_INDEX = 'statusColumnIndex';
 export const RANDOM_FILE_MESSAGE = "randomFileMessage"
 
+export const COMPANY_NAME_COLUMN_INDEX = 'companyNameColumnIndex';
+export const COMPANY_URL_COLUMN_INDEX = 'companyUrlColumnIndex';
+
 export const FILES = 'files';
 
 export const FIRST_MESSAGE = 'firstMessage';
@@ -166,6 +169,26 @@ let settingFields = [
 ];
 
 let messageFields = [
+  {
+		name: COMPANY_NAME_COLUMN_INDEX,
+		label: 'Company Name Column Index',
+		tag: 'input',
+		props: {
+			...baseInputProps,
+			pattern: '[A-Za-z][0-9]+',
+		},
+		wrapper: halfWidthWrapper
+	},
+	{
+		name: COMPANY_URL_COLUMN_INDEX,
+		label: 'Company Url Column Index',
+		tag: 'input',
+		props: {
+			...baseInputProps,
+			pattern: '[A-Za-z][0-9]+',
+		},
+		wrapper: halfWidthWrapper
+	},
 	{
 		name: FIRST_MESSAGE,
 		label: 'First Message',
