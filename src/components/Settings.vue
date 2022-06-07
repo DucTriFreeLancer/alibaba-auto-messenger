@@ -130,6 +130,12 @@
 						this.$log(`Resetting the authorization token`);
 
 						this.$store.dispatch('auth/reset');
+						if(response.error.code=="401"){
+              chrome.identity.getAuthToken({interactive: true}, async (token) => {
+                this.$log(`Renew the authorization token!`);
+                this.$store.dispatch('auth/set', token);
+              });
+						}
 					} else {
 						const columns = {
 							URL: characterToIndex(this.value[URL_COLUMN_INDEX]) - 1,
@@ -162,8 +168,13 @@
 
 								await this.update(`'${sheetName}'!${columnName}${rowIndex}`, [[true]]);
 							} catch (error) {
-								console.trace();
-
+								console.log(error);
+								if(response.error.code=="401"){
+									chrome.identity.getAuthToken({interactive: true}, async (token) => {
+										this.$log(`Renew the authorization token!`);
+										this.$store.dispatch('auth/set', token);
+									});
+								}
 								await this.$log(`An error occurred while processing the current page: ${JSON.stringify(error)}`);
 								await this.update(`'${sheetName}'!${columnName}${rowIndex}`, [[false]]);
 							} finally {

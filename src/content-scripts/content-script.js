@@ -1,7 +1,7 @@
 import {randomValue, wait} from "@/shared/wait";
 import {Keys, Storage} from "@/shared/storage";
 import {FILES, FIRST_MESSAGE, THIRD_MESSAGE,MINIMUM_DELAY_TIME_PER_MESSAGE,MAXIMUM_DELAY_TIME_PER_MESSAGE,RANDOM_FILE_MESSAGE} from "@/shared/settings";
-import {IMAGE_TYPE, EXCEL_TYPE,COMPANY_NAME_COLUMN_INDEX,COMPANY_URL_COLUMN_INDEX} from "@/shared/settings";
+import {IMAGE_TYPE, EXCEL_TYPE, PDF_TYPE,COMPANY_NAME_COLUMN_INDEX,COMPANY_URL_COLUMN_INDEX} from "@/shared/settings";
 import ExcelJS from "exceljs";
 import Spinner from "node-spintax/Spinner";
 const waitFor = (callback) => new Promise(resolve => {
@@ -124,6 +124,14 @@ const process = async () => {
     if(imageFiltereds.length>0){
       var image = imageFiltereds[Math.floor(Math.random()*imageFiltereds.length)];
       messages.push({type: MESSAGE_TYPE_FILE, value: await createFile(image)});
+    }
+    var pdfFiltereds = settings[FILES].filter((pdf) => {
+      let ext = pdf.name.substring(pdf.name.lastIndexOf(".") + 1, pdf.name.length).toLowerCase();
+      return PDF_TYPE.indexOf(ext) != -1
+    });
+    if(pdfFiltereds.length>0){
+      var pdf = pdfFiltereds[Math.floor(Math.random()*pdfFiltereds.length)];
+      messages.push({type: MESSAGE_TYPE_FILE, value: await createFile(pdf)});
     }
     var excelFiltereds = settings[FILES].filter((excel) => {
       let ext = excel.name.substring(excel.name.lastIndexOf(".") + 1, excel.name.length).toLowerCase();

@@ -25,6 +25,8 @@ export const THIRD_MESSAGE = 'thirdMessage';
 
 export const IMAGE_TYPE = ["jpeg", "jpg", "png", "gif"];
 export const EXCEL_TYPE = ["xls", "xlsx"];
+export const PDF_TYPE = ["pdf"];
+
 
 export const baseProps = {
 	class: 'form-control',
