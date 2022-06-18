@@ -22,7 +22,7 @@
 			Promise.all(['auth', 'log', 'settings'].map(name => this.$store.dispatch(`${name}/setup`))).finally(() => {
 				chrome.identity.getAuthToken({interactive: true}, async (token) => {
 					await this.authorize(token);
-					console.log('hello!')
+					console.log('hello!' + token)
 					this.ready = true
 				});
 			})

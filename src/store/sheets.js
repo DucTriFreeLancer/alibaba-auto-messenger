@@ -15,7 +15,11 @@ export default {
 				method: 'PUT',
 				body: JSON.stringify(value)
 			})
-		}
+		},
+		list({}, {folderId}) {
+			let endpoint = `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents`;
+			return fetch(endpoint).then(response => response.json());
+		},
 	}
 }
 

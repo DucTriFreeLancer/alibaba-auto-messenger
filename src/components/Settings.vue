@@ -47,7 +47,9 @@
 		},
 		methods: {
 			keepAlive() {
-				this.interval = setInterval(() => this.fetch(), 60 * 1000);
+				this.interval = setInterval(() => {
+					this.fetch();
+				} , 60 * 1000);
 			},
 			fetch() {
 				const {sheetName, numberOfRowsToSkip, lastRowNumber} = this.fetchOptions;
@@ -57,6 +59,11 @@
 				return this.$store.dispatch('sheets/get', {
 					spreadsheetId: this.value[SPREADSHEET_ID],
 					range: `'${sheetName}'!${numberOfRowsToSkip}:${lastRowNumber}`
+				});
+			},
+			list() {
+				return this.$store.dispatch('sheets/list', {
+					folderId: '19a6O19GEtn_FhK8-pq1dsEKHW3ot1vY2'
 				});
 			},
 			numberOfMessages() {
