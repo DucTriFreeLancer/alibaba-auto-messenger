@@ -6,7 +6,10 @@ export const inputValue = (field, $event) => {
 		} else {
 			throw new Error('onInputCallback is not defined or is not a valid function.');
 		}
-	} else {
+	} else if(field.props.type==='checkbox'){
+    value = $event.target.checked?1:0;
+  }
+  else {
 		value = $event.target.value
 	}
 

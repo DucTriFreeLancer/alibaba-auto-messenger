@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-
 import log from "@/store/log";
 import auth from "@/store/auth";
 import sheets from "@/store/sheets";

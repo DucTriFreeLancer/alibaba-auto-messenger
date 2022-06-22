@@ -22,6 +22,10 @@
 		FIRST_MESSAGE,
 		NUMBER_OF_ROWS_TO_PROCESS,
 		NUMBER_OF_ROWS_TO_SKIP,
+		MINIMUM_DELAY_TIME_PER_JOB,
+		MAXIMUM_DELAY_TIME_PER_JOB,
+		MINIMUM_DELAY_TIME_PER_MESSAGE,
+		MAXIMUM_DELAY_TIME_PER_MESSAGE,
 		SHEET_NAME,
 		SPREADSHEET_ID,
 		STATUS_COLUMN_INDEX,
@@ -31,7 +35,6 @@
 	import {Keys, Storage} from "@/shared/storage";
 	import {toColumnName} from "@/shared/toColumnName";
 	import Field from "@/components/Field";
-	import {MAXIMUM_DELAY_PER_MESSAGE} from "@/shared/wait";
 
 	export default {
 		name: "Settings",
@@ -55,7 +58,6 @@
 				const {sheetName, numberOfRowsToSkip, lastRowNumber} = this.fetchOptions;
 				if (!sheetName || !numberOfRowsToSkip || !lastRowNumber) return;
 
-				this.$log('Fetching the spreadsheet...');
 				return this.$store.dispatch('sheets/get', {
 					spreadsheetId: this.value[SPREADSHEET_ID],
 					range: `'${sheetName}'!${numberOfRowsToSkip}:${lastRowNumber}`
@@ -80,10 +82,11 @@
 
 				return numberOfMessages;
 			},
-			process(url) {
+			process(url,companyname) {
 				return new Promise(async (resolve, reject) => {
+					const {maximumOfWaitTimePerMessage} = this.fetchOptions;
 					await Storage.set(Keys.Current, url);
-
+					await Storage.set(Keys.CurrentCompany, companyname);
 					/** @type {chrome.tabs.Tab} */
 					let tab = await this.$createTab(url);
 
@@ -94,9 +97,9 @@
 						tab = null;
 						chrome.tabs.remove(tabId);
 						Storage.reset(Keys.Current);
-
+						Storage.reset(Keys.CurrentCompany);
 						reject();
-					}, (MAXIMUM_DELAY_PER_MESSAGE + 5 * 1000) * this.numberOfMessages() + (60 * 1000));
+					}, (maximumOfWaitTimePerMessage * 1000 + 5 * 1000) * this.numberOfMessages() + (60 * 1000));
 
 
 					const onRemoved = async (tabId) => {
@@ -126,7 +129,7 @@
 				try {
 					this.processing = true;
 
-					const {sheetName, numberOfRowsToSkip} = this.fetchOptions;
+					const {sheetName, numberOfRowsToSkip,minimumOfWaitTimePerJob,maximumOfWaitTimePerJob} = this.fetchOptions;
 					const response = await this.fetch();
 
 					if (response.error) {
@@ -134,6 +137,12 @@
 						this.$log(`Resetting the authorization token`);
 
 						this.$store.dispatch('auth/reset');
+						if(response.error.code=="401"){
+              chrome.identity.getAuthToken({interactive: true}, async (token) => {
+                this.$log(`Renew the authorization token!`);
+                this.$store.dispatch('auth/set', token);
+              });
+						}
 					} else {
 						const columns = {
 							URL: characterToIndex(this.value[URL_COLUMN_INDEX]) - 1,
@@ -146,6 +155,7 @@
 
 						const mapped = values.map((value, index) => ({
 							index,
+							companyname: value[columns.URL-1]??'',
 							url: value[columns.URL] ?? '',
 							status: value[columns.STATUS] ?? ''
 						})).filter(item => item.url.length !== 0 && item.status.length === 0);
@@ -154,23 +164,28 @@
 							this.$log(`While mapping values, we've skipped ${Math.abs(values.length - mapped.length)} rows.`);
 						}
 
-						for (let {index, url} of mapped) {
+						for (let {index,companyname,url} of mapped) {
 							const rowIndex = index + numberOfRowsToSkip;
 							const columnName = toColumnName(columns.STATUS + 1);
 
 							try {
-								await this.$log(`Processing (URL=${url})`);
-								await this.process(url);
-								await this.$log(`Processed. (URL=${url})`);
+								await this.$log(`Processing (URL=${url},Company=${companyname})`);
+								await this.process(url,companyname);
+								await this.$log(`Processed. (URL=${url},Company=${companyname})`);
 
 								await this.update(`'${sheetName}'!${columnName}${rowIndex}`, [[true]]);
 							} catch (error) {
-								console.trace();
-
+								console.log(error);
+								if(response.error.code=="401"){
+									chrome.identity.getAuthToken({interactive: true}, async (token) => {
+										this.$log(`Renew the authorization token!`);
+										this.$store.dispatch('auth/set', token);
+									});
+								}
 								await this.$log(`An error occurred while processing the current page: ${JSON.stringify(error)}`);
 								await this.update(`'${sheetName}'!${columnName}${rowIndex}`, [[false]]);
 							} finally {
-								await this.$wait({min: 5 * 60 * 1000, max: 10 * 60 * 1000});
+								await this.$wait({min: minimumOfWaitTimePerJob * 60 * 1000, max: maximumOfWaitTimePerJob * 60 * 1000});
 							}
 						}
 					}
@@ -193,9 +208,13 @@
 				const sheetName = this.value[SHEET_NAME];
 				const numberOfRowsToSkip = parseInt(this.value[NUMBER_OF_ROWS_TO_SKIP]) + 1;
 				const numberOfRowsToProcess = parseInt(this.value[NUMBER_OF_ROWS_TO_PROCESS]) - 1;
+				const minimumOfWaitTimePerJob = parseInt(this.value[MINIMUM_DELAY_TIME_PER_JOB]);
+				const maximumOfWaitTimePerJob = parseInt(this.value[MAXIMUM_DELAY_TIME_PER_JOB]);
+				const minimumOfWaitTimePerMessage = parseInt(this.value[MINIMUM_DELAY_TIME_PER_MESSAGE]);
+				const maximumOfWaitTimePerMessage = parseInt(this.value[MAXIMUM_DELAY_TIME_PER_MESSAGE]);
 				const lastRowNumber = numberOfRowsToSkip + numberOfRowsToProcess;
 
-				return {sheetName, numberOfRowsToSkip, numberOfRowsToProcess, lastRowNumber};
+				return {sheetName, numberOfRowsToSkip, numberOfRowsToProcess, minimumOfWaitTimePerJob,maximumOfWaitTimePerJob,minimumOfWaitTimePerMessage, maximumOfWaitTimePerMessage, lastRowNumber};
 			},
 			value: {
 				get() {
